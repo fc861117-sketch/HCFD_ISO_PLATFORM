@@ -327,9 +327,16 @@ function setVTS(type, val, el) {
 
         function initMatrix() {
             const table = document.getElementById('risk-table');
-            let html = "";
+            // [AI FIX] 加入橫縱軸標籤，讓使用者能直接讀應矩陣座標
+            let html = "<tr><td style='border:none;background:transparent;font-size:0.65rem;color:#888;' title='機率軸'></td>";
+            for (let j = 1; j <= 5; j++) {
+                html += `<td style="border:none; background:transparent; text-align:center; font-size:0.65rem; color:#aaa; font-weight:bold; height:20px;">P${j}</td>`;
+            }
+            html += "</tr>";
+
             for (let i = 5; i >= 1; i--) { 
-                html += "<tr>";
+                // 左側寫入嚴重度標籤
+                html += `<tr><td style="border:none; background:transparent; text-align:center; font-size:0.65rem; color:#aaa; font-weight:bold; width:20px;">S${i}</td>`;
                 for (let j = 1; j <= 5; j++) { 
                     const level = matrixData[i-1][j-1];
                     let color = "";
@@ -344,6 +351,8 @@ function setVTS(type, val, el) {
                 }
                 html += "</tr>";
             }
+            // 底部說明
+            html += `<tr><td colspan="6" style="border:none; background:transparent; font-size:0.65rem; color:#666; text-align:center; padding-top:4px;">P=機率(1-5) │ S=嚴重度(1-5)</td></tr>`;
             table.innerHTML = html;
             updateMatrix();
         }
