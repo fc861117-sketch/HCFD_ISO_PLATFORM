@@ -442,10 +442,11 @@
         const detailEl = document.getElementById('detail-view');
         const refSection = document.getElementById('reference-section');
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        // [AI FIX] 改為導入 btn 參數，不再依賴隱式全域 event（修後 Firefox 不會失效）
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.ref-content').forEach(content => content.classList.remove('active'));
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
         
@@ -647,7 +648,8 @@ function showDetail(item) {
             const ghsBox = document.getElementById('d-ghs');
             if (ghsBox) {
                 ghsBox.innerHTML = '';
-                item.ghs[0].split(',').forEach(g => {
+                // [AI FIX] 加入 optional chaining 和空値防守，避免 ghs 陣列為空時崩潰
+                (item.ghs?.[0] || '').split(',').forEach(g => {
                     let icon = g.trim();
                     if (icon === "☢️" && item.class !== "7") icon = "🧪"; // 校正防呆
                     if(icon) {
