@@ -489,6 +489,16 @@ async function executeFinishCase() {
             navigator.geolocation.getCurrentPosition(()=>{}, ()=>{}, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
         }
 
+        // [AI FIX] Android 超時提示：5 秒後若仍未收到絕對角度，顯示說明
+        let hasReceivedAbsHeading = false;
+        const compassTimeoutId = setTimeout(() => {
+            if (!hasReceivedAbsHeading && isCompassRunning) {
+                document.getElementById('liveWindDir').innerText = '無法獲取';
+                document.getElementById('liveWindDeg').innerText = '';
+                showToast("⚠️ 裝置磁力計未回應，請校準後重試或手動選擇風向", "warning");
+            }
+        }, 5000);
+
         liveOrientationHandler = function(event) {
             let heading = null;
             let isAbs = false;
@@ -504,6 +514,10 @@ async function executeFinishCase() {
             }
 
             if (isAbs && heading !== null) {
+                if (!hasReceivedAbsHeading) {
+                    hasReceivedAbsHeading = true;
+                    clearTimeout(compassTimeoutId); // 收到訊號，取消超時提示
+                }
                 if (heading < 0) heading += 360;
                 currentLiveHeading = heading;
 
@@ -912,7 +926,15 @@ async function executeFinishCase() {
             if (pageId === 'page-briefing') document.getElementById('nav-briefing').classList.add('active');
             if (pageId === 'page-medic') document.getElementById('nav-medic').classList.add('active');
         }
-        if(pageId === 'page-medic') renderMedicList(); 
+        if(pageId === 'page-medic') {
+            renderMedicList();
+            // [AI FIX] MEDIC 切換時自動填入當前時間，節省現場操作時間
+            const timeEl = document.getElementById('m_time');
+            if (timeEl && !timeEl.value) {
+                const now = new Date();
+                timeEl.value = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+            }
+        }
         // 記住最後停留的子畫面加在這裡
         localStorage.setItem('isoLastTab', pageId);
         scrollToTop(); 
@@ -942,9 +964,11 @@ async function executeFinishCase() {
                 container.innerHTML = '';
                 data.forEach(key => {
                     const safeKey = key.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    // [AI FIX] XSS 防護：對顯示用的名稱進行 HTML escape
+                    const displayKey = key.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
                     container.innerHTML += `
                     <div class="list-item" style="display:flex; flex-direction:column; align-items:center;">
-                        <div class="list-title" style="font-size:1.2rem; width:100%; text-align:center; margin-bottom:10px;">${key}</div>
+                        <div class="list-title" style="font-size:1.2rem; width:100%; text-align:center; margin-bottom:10px;">${displayKey}</div>
                         <div style="display:flex; flex-direction:column; width:100%; gap:8px;">
                             <button class="btn-main" style="background:#1565c0; width:100%; margin:0; height:45px;" onclick="openProject('${safeKey}', 'view', this)">👁️ 僅供檢視</button>
                             <button class="btn-main" style="background:#2e7d32; width:100%; margin:0; height:45px;" onclick="openProject('${safeKey}', 'edit', this)">✏️ 進入編輯</button>
