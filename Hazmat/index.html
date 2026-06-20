@@ -1187,7 +1187,16 @@ function handleSearch() {
                 });
             } else {
                 resultsEl.style.display = 'block';
-                resultsEl.innerHTML = `<div style="padding:12px; color:#aaa; text-align:center;">查無相符結果</div>`;
+                const safeQuery = encodeURIComponent(query);
+                resultsEl.innerHTML = `
+                    <div style="padding:15px; color:#aaa; text-align:center; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                        <div style="font-size: 1.1rem;">查無相符結果</div>
+                        <div style="font-size: 0.9rem; color: #888;">您可以嘗試直接透過網頁搜尋該物質的安全資料表：</div>
+                        <a href="https://www.google.com/search?q=${safeQuery}+SDS+安全資料表" target="_blank" style="background: #2196f3; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#1976d2'" onmouseout="this.style.background='#2196f3'">
+                            🔍 網頁搜尋「${query}」
+                        </a>
+                    </div>
+                `;
             }
         }
 function showDetail(item) {
